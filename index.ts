@@ -1,14 +1,23 @@
 import express, { Express, Request, Response } from "express";
-import { Socket } from "socket.io";
-import Lobby, { InitializePlayerPayload, LobbyEvent } from "./lobby";
+import { Server } from "socket.io";
+import Lobby from "./lobby";
+import {
+  ClientToServerEvents,
+  ServerToClientEvents,
+  SocketData,
+} from "./socket-server";
 const cors = require("cors");
-const { Server } = require("socket.io");
 const http = require("http");
 
 const app: Express = express();
 const port = 8000;
 const server = http.createServer(app);
-const io = new Server(server, {
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  {},
+  SocketData
+>(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
@@ -22,20 +31,39 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 const lobbies: Record<string, Lobby> = {
-  dev: new Lobby("dev"),
+  "/dev": new Lobby("dev"),
 };
 // lobby namespace
-const lobbyNamespace = io.of("dev"); // TODO replace dev with regex for lobby id
-lobbyNamespace.on("connection", (socket: any) => {
-  console.log(`socket ${socket.id} connected`);
+const lobbyNamespace = io.of("dev"); // TODO: replace dev with regex for lobby id
+lobbyNamespace.on("connection", (socket) => {
+  console.log(`socket ${socket.id} connected ${socket.nsp.name}`);
 
-  // register all socket events
-  const lobby = lobbies[socket.nsp];
+  const lobby = lobbies[socket.nsp.name];
 
-  socket.on(
-    LobbyEvent.InitializePlayer,
-    (payload: InitializePlayerPayload) => {}
-  );
+  if (lobby.isFull()) {
+    return socket.emit("lobby-is-full");
+  }
+
+  lobby.addPlayer(socket.id, { name: socket.data.name! });
+
+  socket.broadcast.emit("add-player", {
+    pid: socket.id,
+    name: socket.data.name!,
+  });
+
+  socket.on("set-ready-status", (ready: boolean) => {
+    lobby.setReadyStatus(socket.id, ready);
+    socket.broadcast.emit("set-ready-status", { pid: socket.id, ready: ready });
+  });
+
+  socket.on("chat-message", ({ message }) => {
+    socket.broadcast.emit("chat-message", { pid: socket.id, message: message });
+  });
+
+  socket.on("disconnect", () => {
+    lobby.removePlayer(socket.id);
+    socket.broadcast.emit("remove-player", { pid: socket.id });
+  });
 });
 
 server.listen(port, () => {
