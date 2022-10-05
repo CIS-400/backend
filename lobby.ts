@@ -18,10 +18,11 @@ export default class Lobby {
   public id: string;
   // map of socket ids to player data in the lobby context
   public playerData: Record<string, PlayerData>;
-  // settings
-  public isPrivate: boolean = false;
-  public hideBankCards: boolean = false;
-  public gameSpeed: GameSpeed = GameSpeed.Medium;
+  public settings = {
+    isPrivate: false,
+    hideBankCards: false,
+    gameSpeed: GameSpeed.Medium,
+  };
 
   constructor(id: string) {
     this.id = id;
