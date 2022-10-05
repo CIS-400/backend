@@ -34,8 +34,8 @@ const lobbies: Record<string, Lobby> = {
   "/dev": new Lobby("dev"),
 };
 // lobby namespace
-const lobbyNamespace = io.of("dev"); // TODO: replace dev with regex for lobby id
-lobbyNamespace.on("connection", (socket) => {
+const wsserver = io.of("dev"); // TODO: replace dev with regex for lobby id
+wsserver.on("connection", (socket) => {
   console.log(`socket ${socket.id} connected ${socket.nsp.name}`);
 
   const lobby = lobbies[socket.nsp.name];
@@ -45,6 +45,7 @@ lobbyNamespace.on("connection", (socket) => {
   }
 
   lobby.addPlayer(socket.id, { name: socket.data.name! });
+  wsserver.to(socket.id).emit("update-settings", lobby.settings);
 
   socket.broadcast.emit("add-player", {
     pid: socket.id,

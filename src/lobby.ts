@@ -13,12 +13,17 @@ interface PlayerData {
   name: string;
   ready: boolean;
 }
+export interface LobbySettings {
+  isPrivate: boolean;
+  hideBankCards: boolean;
+  gameSpeed: GameSpeed;
+}
 export default class Lobby {
   public status: LobbyStatus = LobbyStatus.PreGame;
   public id: string;
   // map of socket ids to player data in the lobby context
   public playerData: Record<string, PlayerData>;
-  public settings = {
+  public settings: LobbySettings = {
     isPrivate: false,
     hideBankCards: false,
     gameSpeed: GameSpeed.Medium,
