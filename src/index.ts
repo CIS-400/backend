@@ -46,7 +46,7 @@ wsserver.on('connection', (socket) => {
     // emit existing lobby state to newly connected client
     socket.emit('update-settings', lobby.settings)
     Object.entries(lobby.playerData).forEach(([pid, { name, ready }]) => {
-      socket.emit('add-player', { pid, name })
+      socket.emit('add-player', { pid, name, owner: lobby.owner })
       socket.emit('set-ready-status', { pid, ready })
     })
   }
@@ -56,6 +56,7 @@ wsserver.on('connection', (socket) => {
     wsserver.emit('add-player', {
       pid: socket.id,
       name: name,
+      owner: lobby.owner,
     })
   })
 
@@ -64,10 +65,10 @@ wsserver.on('connection', (socket) => {
     socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready })
   })
 
-  socket.on('chat-message', ({ message }) => {
+  socket.on('chat-message', (message) => {
     socket.broadcast.emit('chat-message', {
       pid: socket.id,
-      message,
+      message: message,
     })
   })
 
@@ -79,7 +80,10 @@ wsserver.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('socket', socket.id, 'disconnected')
     lobby.removePlayer(socket.id)
-    socket.broadcast.emit('remove-player', { pid: socket.id })
+    socket.broadcast.emit('remove-player', {
+      pid: socket.id,
+      owner: lobby.owner,
+    })
   })
 })
 
