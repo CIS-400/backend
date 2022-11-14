@@ -1,6 +1,6 @@
 import express, { Express, Request, Response } from 'express'
 import { Server } from 'socket.io'
-import Lobby from './lobby'
+import Lobby, { LobbyStatus } from './lobby'
 import {
   ClientToServerEvents,
   ServerToClientEvents,
@@ -84,6 +84,11 @@ wsserver.on('connection', (socket) => {
       pid: socket.id,
       owner: lobby.owner,
     })
+  })
+
+  socket.on('start-game', () => {
+    lobby.status = LobbyStatus.InGame
+    socket.broadcast.emit('start-game')
   })
 })
 

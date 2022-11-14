@@ -11,12 +11,14 @@ export interface ServerToClientEvents {
   'update-settings': (data: LobbySettings) => void
   'remove-player': (data: { pid: string; owner: string | undefined }) => void
   'lobby-is-full': () => void
+  'start-game': () => void
 }
 export interface ClientToServerEvents {
   'add-player': (data: { name: string }) => void
   'chat-message': (message: string) => void
   'set-ready-status': (ready: boolean) => void
   'update-settings': (data: LobbySettings) => void
+  'start-game': () => void
 }
 export interface SocketData {
   name: string
