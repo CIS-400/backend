@@ -24,6 +24,8 @@ export default class Lobby {
   // map of socket ids to player data in the lobby context
   public playerData: Record<string, PlayerData>
   public owner: string | undefined
+  // list of cookies that allow a connection into the lobby. only used once the game has started.
+  public allowList: string[] = []
   public settings: LobbySettings = {
     isPrivate: false,
     hideBankCards: false,

@@ -39,7 +39,14 @@ wsserver.on('connection', (socket) => {
   console.log(`socket ${socket.id} connected ${socket.nsp.name}`)
 
   const lobby = lobbies[socket.nsp.name]
-  if (lobby.isFull()) {
+  if (
+    lobby.isFull() ||
+    (lobby.status !== LobbyStatus.PreGame &&
+      !lobby.allowList.includes(
+        socket.handshake.headers['allow-list-id'] as string,
+      ))
+  ) {
+    console.log('could not join!')
     socket.emit('lobby-is-full')
     return socket.disconnect()
   } else {
@@ -86,8 +93,9 @@ wsserver.on('connection', (socket) => {
     })
   })
 
-  socket.on('start-game', () => {
+  socket.on('start-game', async () => {
     lobby.status = LobbyStatus.InGame
+    lobby.allowList = [...(await wsserver.allSockets())]
     socket.broadcast.emit('start-game')
   })
 })
