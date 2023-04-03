@@ -98,6 +98,10 @@ wsserver.on('connection', (socket) => {
     lobby.allowList = [...(await wsserver.allSockets())]
     socket.broadcast.emit('start-game')
   })
+
+  socket.on('action', (action) => {
+    socket.broadcast.emit('get-action', action)
+  })
 })
 
 server.listen(port, () => {
