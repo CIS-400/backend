@@ -103,6 +103,7 @@ wsserver.on('connection', (socket) => {
   })
 
   socket.on('action', (action) => {
+    console.log('socket', socket.id, 'action', action)
     socket.broadcast.emit('get-action', action)
   })
 })
