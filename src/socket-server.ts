@@ -17,7 +17,7 @@ export interface ServerToClientEvents {
   'get-action': (data: SETTLERS.Action) => void
 }
 export interface ClientToServerEvents {
-  'add-player': (data: { name: string; number: number }) => void
+  'add-player': (data: { name: string }) => void
   'chat-message': (message: string) => void
   'set-ready-status': (ready: boolean) => void
   'update-settings': (data: LobbySettings) => void
