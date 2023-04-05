@@ -52,18 +52,21 @@ wsserver.on('connection', (socket) => {
   } else {
     // emit existing lobby state to newly connected client
     socket.emit('update-settings', lobby.settings)
-    Object.entries(lobby.playerData).forEach(([pid, { name, ready }]) => {
-      socket.emit('add-player', { pid, name, owner: lobby.owner })
-      socket.emit('set-ready-status', { pid, ready })
-    })
+    Object.entries(lobby.playerData).forEach(
+      ([pid, { name, ready, number }]) => {
+        socket.emit('add-player', { pid, name, owner: lobby.owner, number })
+        socket.emit('set-ready-status', { pid, ready })
+      },
+    )
   }
 
   socket.on('add-player', ({ name }) => {
-    lobby.addPlayer(socket.id, { name })
+    const player = lobby.addPlayer(socket.id, { name })
     wsserver.emit('add-player', {
       pid: socket.id,
       name: name,
       owner: lobby.owner,
+      number: player.number,
     })
   })
 

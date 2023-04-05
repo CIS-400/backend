@@ -6,6 +6,7 @@ export interface ServerToClientEvents {
   'add-player': (data: {
     pid: string
     name: string
+    number: number
     owner: string | undefined
   }) => void
   'set-ready-status': (data: { pid: string; ready: boolean }) => void
@@ -16,7 +17,7 @@ export interface ServerToClientEvents {
   'get-action': (data: SETTLERS.Action) => void
 }
 export interface ClientToServerEvents {
-  'add-player': (data: { name: string }) => void
+  'add-player': (data: { name: string; number: number }) => void
   'chat-message': (message: string) => void
   'set-ready-status': (ready: boolean) => void
   'update-settings': (data: LobbySettings) => void

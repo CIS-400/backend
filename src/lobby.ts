@@ -12,6 +12,7 @@ export enum GameSpeed {
 export interface PlayerData {
   name: string
   ready: boolean
+  number: number
 }
 export interface LobbySettings {
   isPrivate: boolean
@@ -41,11 +42,18 @@ export default class Lobby {
     return Object.keys(this.playerData).length === 4
   }
 
-  public addPlayer(pid: string, data: { name: string }): void {
+  public addPlayer(pid: string, data: { name: string }): PlayerData {
     if (Object.keys(this.playerData).length === 0) {
       this.owner = pid
     }
-    this.playerData[pid] = { name: data.name, ready: false }
+    // assign the player a number between 0 and 3 that has not already been given to another player
+    const numbers = Object.values(this.playerData).map((p) => p.number)
+    let number = (Math.random() * 4) << 0
+    while (numbers.includes(number)) {
+      number = (Math.random() * 4) << 0
+    }
+    this.playerData[pid] = { name: data.name, ready: false, number: number }
+    return this.playerData[pid]
   }
 
   public removePlayer(pid: string): void {
