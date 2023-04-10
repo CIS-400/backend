@@ -15,6 +15,7 @@ export interface ServerToClientEvents {
   'lobby-is-full': () => void
   'start-game': () => void
   'get-action': (data: SETTLERS.Action) => void
+  'set-seed': (seed: string) => void
 }
 export interface ClientToServerEvents {
   'add-player': (data: { name: string }) => void

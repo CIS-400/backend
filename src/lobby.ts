@@ -22,6 +22,7 @@ export interface LobbySettings {
 export default class Lobby {
   public status: LobbyStatus = LobbyStatus.PreGame
   public id: string
+  public seed: string
   // map of socket ids to player data in the lobby context
   public playerData: Record<string, PlayerData>
   public owner: string | undefined
@@ -36,6 +37,7 @@ export default class Lobby {
   constructor(id: string) {
     this.id = id
     this.playerData = {}
+    this.seed = Math.random().toString(36).substring(2, 15)
   }
 
   public isFull() {

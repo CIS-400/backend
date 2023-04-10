@@ -52,6 +52,7 @@ wsserver.on('connection', (socket) => {
   } else {
     // emit existing lobby state to newly connected client
     socket.emit('update-settings', lobby.settings)
+    socket.emit('set-seed', lobby.seed)
     Object.entries(lobby.playerData).forEach(
       ([pid, { name, ready, number }]) => {
         socket.emit('add-player', { pid, name, owner: lobby.owner, number })
