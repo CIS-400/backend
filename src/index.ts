@@ -82,11 +82,118 @@ retrieveLobbies()
     const app: Express = express()
     const port = 8000
 
-    app.use(cors())
+    app.use(express.json());
+
+    app.use(cors({
+      origin: 'http://localhost:3000', // Replace with your actual frontend domain
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type']
+    }));
 
     app.get('/', (req: Request, res: Response) => {
       res.send('hello world')
     })
+
+    app.post('/api/create-lobby', (req: Request, res: Response) => {
+      const { id, status, settings, playerData } = req.body;
+
+      const newLobby = io.of(id);
+      
+      lobbies[id] = new Lobby(id);
+      Object.entries(playerData).forEach(([key, value]) => {
+        lobbies[id].addPlayer(key, {name: value.name});
+        lobbies[id].setReadyStatus(key, value.ready);
+      })
+      switch(status) {
+        case "PreGame":
+          lobbies[id].status = LobbyStatus.PreGame;
+          break;
+        case "InGame":
+          lobbies[id].status = LobbyStatus.InGame;
+          break;
+        case "PostGame":
+          lobbies[id].status = LobbyStatus.PostGame;
+          break;
+      }
+      let newsettings: LobbySettings  = {isPrivate: settings.isPrivate, hideBankCards: settings.hideBankCards, gameSpeed: GameSpeed.Medium};
+      switch(settings.gameSpeed) {
+        case "Slow":
+          newsettings.gameSpeed = GameSpeed.Slow;
+          break;
+        case "Medium":
+          newsettings.gameSpeed = GameSpeed.Medium;
+          break;
+        case "Fast":
+          newsettings.gameSpeed = GameSpeed.Fast;
+          break;
+        case "VeryFast":
+          newsettings.gameSpeed = GameSpeed.VeryFast;
+          break;
+      }
+
+      lobbies[id].settings = settings;
+      newLobby.on('connection', (socket) => {
+        console.log(`socket ${socket.id} connected ${socket.nsp.name}`)
+    
+        const lobby = lobbies[socket.nsp.name.replace(/\//g, '')];
+        if (lobby.isFull()) {
+          socket.emit('lobby-is-full')
+          return socket.disconnect()
+        } else {
+          // emit existing lobby state to newly connected client
+          socket.emit('update-settings', lobby.settings)
+          Object.entries(lobby.playerData).forEach(([pid, { name, ready }]) => {
+            socket.emit('add-player', { pid, name, owner: lobby.owner })
+            socket.emit('set-ready-status', { pid, ready })
+          })
+        }
+    
+        socket.on('add-player', ({ name }) => {
+          lobby.addPlayer(socket.id, { name })
+          socket.emit('add-player', {
+            pid: socket.id,
+            name: name,
+            owner: lobby.owner,
+          })
+        })
+    
+        socket.on('set-ready-status', (ready: boolean) => {
+          lobby.setReadyStatus(socket.id, ready)
+          socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready })
+        })
+    
+        socket.on('chat-message', (message) => {
+          socket.broadcast.emit('chat-message', {
+            pid: socket.id,
+            message: message,
+          })
+        })
+    
+        socket.on('update-settings', (settings) => {
+          lobby.settings = settings
+          socket.broadcast.emit('update-settings', settings)
+        })
+    
+        socket.on('disconnect', () => {
+          console.log('socket', socket.id, 'disconnected')
+          lobby.removePlayer(socket.id)
+          socket.broadcast.emit('remove-player', {
+            pid: socket.id,
+            owner: lobby.owner,
+          })
+        })
+    
+        socket.on('start-game', () => {
+          lobby.status = LobbyStatus.InGame
+          socket.broadcast.emit('start-game')
+        })
+      })
+
+      // Return a JSON response with a success message
+      res.json({ message: `Lobby ${id} created successfully` });
+    })
+    
+
 
     const server = http.createServer(app);
     const io = new Server<
@@ -100,6 +207,7 @@ retrieveLobbies()
         methods: ['GET', 'POST'],
       },
 });
+
     const wsservers = lobbyKeys.map((lobbyId) => io.of(lobbyId))
     
     console.log(lobbyKeys);
@@ -123,7 +231,7 @@ retrieveLobbies()
     
         socket.on('add-player', ({ name }) => {
           lobby.addPlayer(socket.id, { name })
-          wsserver.emit('add-player', {
+          socket.emit('add-player', {
             pid: socket.id,
             name: name,
             owner: lobby.owner,
