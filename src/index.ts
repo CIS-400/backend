@@ -90,6 +90,34 @@ retrieveLobbies()
       allowedHeaders: ['Content-Type']
     }));
 
+    const updateLobbyInDB = (id: string, data: string): Promise<void> => {
+      console.log(id, data);
+      return new Promise((resolve, reject) => {
+        const updateParams = {
+          TableName: 'settlers-lobbies',
+          Key: {
+            "lobby-id": { S: id },
+          },
+          UpdateExpression: 'set #data_string = :data',
+          ExpressionAttributeNames: {
+            '#data_string': 'data-string',
+          },
+          ExpressionAttributeValues: {
+            ':data': { S: data },
+          },
+        };
+    
+        dynamoDB.updateItem(updateParams, (err: Error) => {
+          if (err) {
+            console.error('Error updating item in DynamoDB:', err);
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+    };
+
     app.get('/', (req: Request, res: Response) => {
       res.send('hello world')
     })
@@ -148,45 +176,58 @@ retrieveLobbies()
           })
         }
     
+        // Inside the 'add-player' handler
         socket.on('add-player', ({ name }) => {
-          lobby.addPlayer(socket.id, { name })
+          lobby.addPlayer(socket.id, { name });
           socket.emit('add-player', {
             pid: socket.id,
             name: name,
             owner: lobby.owner,
-          })
-        })
-    
+          });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'set-ready-status' handler
         socket.on('set-ready-status', (ready: boolean) => {
-          lobby.setReadyStatus(socket.id, ready)
-          socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready })
-        })
-    
+          lobby.setReadyStatus(socket.id, ready);
+          socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'chat-message' handler
         socket.on('chat-message', (message) => {
           socket.broadcast.emit('chat-message', {
             pid: socket.id,
             message: message,
-          })
-        })
-    
+          });
+          // No need to update DynamoDB here, as chat messages are not stored in the lobby data
+        });
+
+        // Inside the 'update-settings' handler
         socket.on('update-settings', (settings) => {
-          lobby.settings = settings
-          socket.broadcast.emit('update-settings', settings)
-        })
-    
+          lobby.settings = settings;
+          socket.broadcast.emit('update-settings', settings);
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'disconnect' handler
         socket.on('disconnect', () => {
-          console.log('socket', socket.id, 'disconnected')
-          lobby.removePlayer(socket.id)
+          console.log('socket', socket.id, 'disconnected');
+          lobby.removePlayer(socket.id);
           socket.broadcast.emit('remove-player', {
             pid: socket.id,
             owner: lobby.owner,
-          })
-        })
-    
+          });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'start-game' handler
         socket.on('start-game', () => {
-          lobby.status = LobbyStatus.InGame
-          socket.broadcast.emit('start-game')
-        })
+          lobby.status = LobbyStatus.InGame;
+          socket.broadcast.emit('start-game');
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
       })
 
       // Return a JSON response with a success message
@@ -229,45 +270,58 @@ retrieveLobbies()
           })
         }
     
+        // Inside the 'add-player' handler
         socket.on('add-player', ({ name }) => {
-          lobby.addPlayer(socket.id, { name })
+          lobby.addPlayer(socket.id, { name });
           socket.emit('add-player', {
             pid: socket.id,
             name: name,
             owner: lobby.owner,
-          })
-        })
-    
+          });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'set-ready-status' handler
         socket.on('set-ready-status', (ready: boolean) => {
-          lobby.setReadyStatus(socket.id, ready)
-          socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready })
-        })
-    
+          lobby.setReadyStatus(socket.id, ready);
+          socket.broadcast.emit('set-ready-status', { pid: socket.id, ready: ready });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'chat-message' handler
         socket.on('chat-message', (message) => {
           socket.broadcast.emit('chat-message', {
             pid: socket.id,
             message: message,
-          })
-        })
-    
+          });
+          // No need to update DynamoDB here, as chat messages are not stored in the lobby data
+        });
+
+        // Inside the 'update-settings' handler
         socket.on('update-settings', (settings) => {
-          lobby.settings = settings
-          socket.broadcast.emit('update-settings', settings)
-        })
-    
+          lobby.settings = settings;
+          socket.broadcast.emit('update-settings', settings);
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'disconnect' handler
         socket.on('disconnect', () => {
-          console.log('socket', socket.id, 'disconnected')
-          lobby.removePlayer(socket.id)
+          console.log('socket', socket.id, 'disconnected');
+          lobby.removePlayer(socket.id);
           socket.broadcast.emit('remove-player', {
             pid: socket.id,
             owner: lobby.owner,
-          })
-        })
-    
+          });
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
+        // Inside the 'start-game' handler
         socket.on('start-game', () => {
-          lobby.status = LobbyStatus.InGame
-          socket.broadcast.emit('start-game')
-        })
+          lobby.status = LobbyStatus.InGame;
+          socket.broadcast.emit('start-game');
+          updateLobbyInDB(socket.nsp.name.replace(/\//g, ''), JSON.stringify(lobby.getJSON())); // Update DynamoDB
+        });
+
       })
     })
     
