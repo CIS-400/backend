@@ -72,4 +72,11 @@ export default class Lobby {
   public setReadyStatus(pid: string, ready: boolean): void {
     this.playerData[pid].ready = ready
   }
+ 
+
+  public getJSON() {
+    return {status: LobbyStatus[this.status], id: this.id, playerData: this.playerData, seed: this.seed, allowList: this.allowList,
+      owner: this.owner, settings: {isPrivate: this.settings.isPrivate, hideBankCards: this.settings.hideBankCards, gameSpeed: GameSpeed[this.settings.gameSpeed]}}
+
+  }
 }
