@@ -14,7 +14,7 @@ export interface ServerToClientEvents {
   'remove-player': (data: { pid: string; owner: string | undefined }) => void
   'lobby-is-full': () => void
   'start-game': () => void
-  'get-action': (data: SETTLERS.Action) => void
+  'get-action': (data: string) => void
   'set-seed': (seed: string) => void
 }
 export interface ClientToServerEvents {
@@ -23,7 +23,7 @@ export interface ClientToServerEvents {
   'set-ready-status': (ready: boolean) => void
   'update-settings': (data: LobbySettings) => void
   'start-game': () => void
-  action: (data: SETTLERS.Action) => void
+  action: (data: string) => void
 }
 export interface SocketData {
   name: string
