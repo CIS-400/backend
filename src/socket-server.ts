@@ -16,6 +16,7 @@ export interface ServerToClientEvents {
   'start-game': () => void
   'get-action': (data: string) => void
   'set-seed': (seed: string) => void
+  'set-name': (data: { pid: string; name: string }) => void
 }
 export interface ClientToServerEvents {
   'add-player': (data: { name: string }) => void
@@ -23,6 +24,7 @@ export interface ClientToServerEvents {
   'set-ready-status': (ready: boolean) => void
   'update-settings': (data: LobbySettings) => void
   'start-game': () => void
+  'set-name': (name: string) => void
   action: (data: string) => void
 }
 export interface SocketData {
