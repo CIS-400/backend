@@ -90,7 +90,7 @@ retrieveLobbies()
 
     app.use(
       cors({
-        origin: 'http://localhost:3000', // Replace with your actual frontend domain
+        origin: 'http://34.227.103.138:3000', // Replace with your actual frontend domain
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders: ['Content-Type'],
       }),
@@ -437,8 +437,8 @@ retrieveLobbies()
       })
     })
 
-    server.listen(port, () => {
-      console.log(`⚡️[server]: Server is running at https://localhost:${port}`)
+    server.listen(port, "0.0.0.0", () => {
+      console.log(`⚡️[server]: Server is running at https://34.227.103.138:${port}`)
     })
 
     // Do something with the lobbies object
